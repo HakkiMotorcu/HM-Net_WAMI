@@ -1,0 +1,38 @@
+{
+    "train":
+    {
+        "image_sequences":"../Datasets/WPAFB/train/sequences/",
+        "annotations_coco":"../Datasets/WPAFB/train/train.json",
+        "annotations_raw":"../Datasets/WPAFB/train/annotations/",
+        "classes":[1],
+        "class_name" : ["ignore", "vehicle"]
+
+        },
+    "val":
+    {
+        "image_sequences":"../Datasets/WPAFB/val/sequences/",
+        "annotations_coco":"../Datasets/WPAFB/val/val.json",
+        "annotations_raw":"../Datasets/WPAFB/val/annotations/",
+        "classes":[1],
+        "class_name" : ["ignore", "vehicle"]
+    },
+    "test":
+    {
+        "image_sequences":"../Datasets/WPAFB/test/sequences/",
+        "annotations_coco":"../Datasets/WPAFB/test/test.json",
+        "annotations_raw":"../Datasets/WPAFB/test/annotations/",
+        "classes":[1],
+        "class_name" : ["ignore", "vehicle"]
+    },
+    "challenge":
+    {
+        "image_sequences":"../Datasets/WPAFB/challenge/sequences/",
+        "annotations_coco":"../Datasets/WPAFB/challenge/challenge.json",
+        "annotations_raw":"../Datasets/WPAFB/challenge/annotations/",
+        "classes":[1],
+        "class_name" : ["ignore", "vehicle"]
+    },
+    "mean":[0.40789654, 0.44719302, 0.47026115],
+    "std":[0.28863828, 0.27408164, 0.27809835],
+    "tag":"base"
+}
