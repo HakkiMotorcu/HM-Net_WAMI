@@ -45,6 +45,6 @@ Important Note: All information related to a dataset is kept under "Source/data_
 For training and testing purposes consult to "Source.lib.setup.py" and given ".sh" files. 
 
 #### Acknowledgement
-While writing this repo, we were inspired by the following ifzhang/FairMOT and xingyizhou/CenterNet repositories. 
+While writing this repo, we were inspired by the following ifzhang/FairMOT and xingyizhou/CenterTrack repositories. 
 
 
