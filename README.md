@@ -33,11 +33,11 @@ pip install -r requirements.txt
           |   |--- annotations
           |   |--- ...
 ~~~
-To generate json files, we provided one example converter under "Source.lib.data.data_tools" "sat2coco.py", which takes the format below and converts it to coco.
+To generate json files, we provided one example converter under "Source/lib.data/data_tools/" "sat2coco.py", which takes the format below and converts it to coco.
 ~~~
 <frame_index>,<target_id>,<bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
 ~~~
-All information related to a dataset is kept under "Source.data_conf" folder. 
+Important Note: All information related to a dataset is kept under "Source/data_conf/" folder. After preparing dataset create a json file (template file can be found on the folder).
 
 
 ### Usage 
