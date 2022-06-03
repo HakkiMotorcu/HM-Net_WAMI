@@ -15,8 +15,8 @@ git clone https://github.com/HakkiMotorcu/HM-Net_WAMI $HM-Net_ROOT
 ~~~
 ~~~
 cd HM-Net_ROOT
-conda create --name <env> python=3.9.12
-conda activate <env>
+conda create --name HM_Net python=3.9.12
+conda activate HM_Net
 conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
 pip install -r requirements.txt
 ~~~
