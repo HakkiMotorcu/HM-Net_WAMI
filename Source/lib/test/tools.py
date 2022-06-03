@@ -136,10 +136,9 @@ def decoder(setup,outputs):
         # else:
         wh = wh.view(batch, K, 2)
         if setup.norm_wh:
-            #wh[..., 0:1]*=setup.inp_res[1]/setup.norm_coef
-            #wh[..., 1:2]*=setup.inp_res[0]/setup.norm_coef
-            wh[..., 0:1]*=432/setup.norm_coef
-            wh[..., 1:2]*=432/setup.norm_coef
+            wh[..., 0:1]*=setup.inp_res[1]/setup.norm_coef
+            wh[..., 1:2]*=setup.inp_res[0]/setup.norm_coef
+            
 
 
         # if setup.ltrb:
