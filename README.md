@@ -31,13 +31,13 @@ pip install -r requirements.txt
           |    |--- train.json (coco format annotations can be generated)
           |--- test
           |   |--- annotations
-          |---|--- ...
+          |   |--- ...
 ~~~
-To generate Json labels we provided one example converter under "Source.lib.data.data_tools" "sat2coco.py", which takes the format below and converts it to coco.
+To generate json files, we provided one example converter under "Source/lib.data/data_tools/" "sat2coco.py", which takes the format below and converts it to coco.
 ~~~
 <frame_index>,<target_id>,<bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
 ~~~
-All information related to a dataset is kept under "Source.data_conf" folder. 
+Important Note: All information related to a dataset is kept under "Source/data_conf/" folder. After preparing dataset create a json file (template file can be found on the folder).
 
 
 ### Usage 
@@ -45,4 +45,6 @@ All information related to a dataset is kept under "Source.data_conf" folder.
 For training and testing purposes consult to "Source.lib.setup.py" and given ".sh" files. 
 
 #### Acknowledgement
-While writing this repo, we were inspired by the following ifzhang/FairMOT and xingyizhou/CenterNet repositories. Thanks for their wonderful works.
+While writing this repo, we were inspired by the following ifzhang/FairMOT and xingyizhou/CenterNet repositories. 
+
+
