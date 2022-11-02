@@ -8,7 +8,7 @@ import sys
 import numpy as np
 from .data.data_tools.tools import read_json
 
-#https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+
 def str2bool(v):
         if isinstance(v, bool):
             return v
@@ -56,6 +56,7 @@ class Setup(object):
         self.parser.add_argument('--norm_wh',default=True,type=str2bool, nargs='?', const=True, help="normalizes width and heihgt with image dimensions")
         self.parser.add_argument('--norm_offset',default=False,type=str2bool, nargs='?', const=True, help="normalizes offset vector with image sizes")
         self.parser.add_argument('--norm_color',default=False,type=str2bool, nargs='?', const=True, help="normalizes offset vector with image sizes")
+        self.parser.add_argument('--fix_norm_coef',default=-1,type=int, help="normalizes offset vector and width height with this coef")
         self.parser.add_argument('--ltrb',default=False,type=str2bool, nargs='?', const=True, help="not added yet")
         self.parser.add_argument('--is_crop', default=True,type=str2bool, nargs='?', const=True, help='')
 
@@ -99,7 +100,7 @@ class Setup(object):
         self.parser.add_argument('--max_age', default=5,type=int , help='')
         self.parser.add_argument('--is_challenge', default=True,type=str2bool, nargs='?', const=True, help='todo later')
         self.parser.add_argument('--is_public', default=False,type=str2bool, nargs='?', const=True, help='')
-        self.parser.add_argument('--is_hungarian', default=True,type=str2bool, nargs='?', const=True,  help='')
+        self.parser.add_argument('--is_hungarian', default=False,type=str2bool, nargs='?', const=True,  help='')
         self.parser.add_argument('--pre_hm_init_zero', default=False,type=str2bool, nargs='?', const=True, help='')
         self.parser.add_argument('--nms', default=5, type=int , help='non maxima suppression window size, should be an odd number')
         self.parser.add_argument('--test_fix_res', default=True, type=str2bool, nargs='?', const=True, help='')
@@ -146,8 +147,9 @@ class Setup(object):
             setup.regression_head_dims["hm"]=1
             setup.regression_head_dims["cls"]=setup.num_classes
 
-        setup.cls2id={data["class_name"][i]:i for i in range(len(data["class_name"]))}
-        setup.id2cls={i:data["class_name"][i] for i in range(len(data["class_name"]))}
+        setup.cls2id={data["class_name"][c]:i+1 for i,c in enumerate(data["classes"])}
+        setup.id2cls={i+1:data["class_name"][c] for i,c in enumerate(data["classes"])}
+        setup.mapper={data["classes"][i]:i+1 for i in range(setup.num_classes)}
         setup.dataset_tag=dataset["tag"] #selector name needed for datasets.get_dataset
 
         if data["annotations_coco"].endswith(".json"):
@@ -224,7 +226,11 @@ class Setup(object):
                            "weight_dict" :{'hm': 1, 'wh': 1,'reg': 0.1,'tracking': 1,"cls":1},
                            "test_input":["img","pre_hm","pre_img"]
         }
-        self.tasks={"mot":self.mot_settings,"mot2":self.mot2_settings,"sat_mot":self.sat_mot_settings,"wami_mot":self.wami_mot_settings}
+        self.motA_settings={"regression_head_dims":{'hm': None},
+                           "keys":["pre_hm"], #controls creation of these optional features
+                           "weight_dict" :{'hm': None},
+                           "test_input":["img","pre_hm","pre_img"]}
+        self.tasks={"mot":self.mot_settings,"mota":self.motA_settings,"mot2":self.mot2_settings,"sat_mot":self.sat_mot_settings,"wami_mot":self.wami_mot_settings}
         self.default_res=(608,1088)
         self.number_of_input_images=2
 

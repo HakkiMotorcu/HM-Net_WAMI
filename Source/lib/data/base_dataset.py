@@ -45,7 +45,18 @@ class BaseDataset(Dataset):
 
         self.get_item = self.get_item_train if  self.is_all else self.get_item_test
         self.len= len(self.labels)
+        #todo
+        """
+        Rotation
+        output rescaling
+        control over heads
+        color_aug
 
+        #adapt visdrone
+        self.mean=None
+        self.std=None
+        """
+        #print(self.track_len_info())
         self.track_names,self.track_info = None,None
         if not self.is_training:
             self.track_names,self.track_info=self.track_len_info()
@@ -78,7 +89,7 @@ class BaseDataset(Dataset):
         else:
             new_h,new_w=self.setup.inp_res
             h,w,c=image.shape if len(image.shape)==3 else (image.shape[0],image.shape[1],1)
-
+            #print(h,w,c,new_h,new_w,c,self.labels[idx]["frame_id"])
             imageZ=np.zeros((new_h,new_w,c))
             imageZ[:h,:w] = image
             image=imageZ
@@ -90,7 +101,7 @@ class BaseDataset(Dataset):
             pre_image = ((pre_image - self.setup.mean) / self.setup.std)
         image=self.totensor(image)
         pre_image=self.totensor(pre_image)
-
+        #print(image.shape,pre_image.shape,self.pre_hm.shape)
         return {"img":image,"pre_img":pre_image,"pre_hm":self.pre_hm}
 
     def get_item_train(self,idx):
@@ -101,7 +112,7 @@ class BaseDataset(Dataset):
         image,obs,top,left=self.res_transform(image,obs)
 
 
-
+        #print(obs)
         rfc=np.random.random()<self.setup.random_flip
 
         if rfc and self.is_training:
@@ -120,7 +131,7 @@ class BaseDataset(Dataset):
             pre_image,pre_obs=self.get_pre_data(idx,previous_image_distance=random.randint(1,self.setup.max_frame_dist))
 
             pre_image,pre_obs,_,_=self.res_transform(pre_image,pre_obs,top,left) if self.setup.use_same_augments else self.crop(pre_image,pre_obs)
-
+            #print(pre_obs)
             if rfc and self.is_training:
                 pre_image = pre_image[:, ::-1, :].copy()
                 pre_obs[:,1]=self.setup.inp_res[1]-pre_obs[:,1]-1
@@ -140,7 +151,13 @@ class BaseDataset(Dataset):
             sample["pre_hm"]= self.gen_pre_hm(pre_obs) if self.is_all or idx==0 else []
             sample["pre_img"]=pre_image
 
-
+        #plt.imshow(np.clip(sample["hm"].sum(0),0,1))
+        #plt.figure()
+        ##plt.imshow(np.clip(sample["pre_hm"].sum(0),0,1))
+        #plt.figure()
+        #plt.imshow(kk)
+        #plt.show()
+        #print(image.shape,pre_image.shape,sample["pre_hm"].shape)
         return sample
 
     def init_hm(self):
@@ -167,7 +184,9 @@ class BaseDataset(Dataset):
         heatmap=np.zeros((self.setup.regression_head_dims["hm"],self.setup.out_res[0],self.setup.out_res[1]), dtype=np.float32)
         num_objs = min(len(anns), self.setup.max_objs)
         for _,x,y,w,h,cls_id in anns:
-            if cls_id!=0 and cls_id in self.setup.id2cls:
+            if cls_id!=0 and cls_id in self.setup.mapper:
+                h=h+ np.random.randn() * 0.15 * h
+                w=w+ np.random.randn() * 0.15 * w
                 radius = gaussian_radius((math.ceil(h), math.ceil(w)))
                 radius = max(self.min_rad, int(radius))
 
@@ -187,9 +206,9 @@ class BaseDataset(Dataset):
                     #print(ecp1)
                     for i in range(ecp1):
                         ax,ay=x-np.random.randn()*w*0.05,y-np.random.randn()*0.05*h
-                        draw_umich_gaussian(heatmap[(int(cls_id) - 1)%self.setup.regression_head_dims["hm"]], (ax,ay), radius,k=conf*1)
+                        draw_umich_gaussian(heatmap[(int(self.setup.mapper[cls_id]) - 1)%self.setup.regression_head_dims["hm"]], (ax,ay), radius,k=conf*1)
 
-                draw_umich_gaussian(heatmap[(int(cls_id) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius,k=conf)
+                draw_umich_gaussian(heatmap[(int(self.setup.mapper[cls_id]) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius,k=conf)
 
 
 
@@ -199,10 +218,10 @@ class BaseDataset(Dataset):
         heatmap=np.zeros((self.setup.regression_head_dims["hm"],self.setup.out_res[0],self.setup.out_res[1]), dtype=np.float32)
         num_objs = min(len(anns), self.setup.max_objs)
         for _,x,y,w,h,cls_id in anns:
-            if cls_id!=0 and cls_id in self.setup.id2cls:
+            if cls_id!=0 and cls_id in self.setup.mapper:
                 radius = gaussian_radius((math.ceil(h), math.ceil(w)))
                 radius = max(self.min_rad, int(radius))
-                draw_umich_gaussian(heatmap[(int(cls_id) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius,k=1)
+                draw_umich_gaussian(heatmap[(int(self.setup.mapper[cls_id]) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius,k=1)
         return heatmap
 
     def get_pre_data(self,idx,previous_image_distance=1):
@@ -211,7 +230,7 @@ class BaseDataset(Dataset):
             pre_idx=idx
         pre_img_path = os.path.join(self.root_path, self.labels[pre_idx]["path"])
         pre_image = cv2.imread(pre_img_path)
-
+        #print(self.labels[pre_idx]["path"])
         pre_obs = np.array(self.labels[pre_idx]["ann"])
         return pre_image,pre_obs
 
@@ -233,34 +252,41 @@ class BaseDataset(Dataset):
     def gen_data(self,sample,anns,pre_anns=None,img=0):
         aaa=self.setup.norm_coef
         num_objs = min(len(anns), self.setup.max_objs)
+        x_coef=self.setup.fix_norm_coef  if self.setup.fix_norm_coef !=-1 else self.setup.inp_res[1]
+        y_coef=self.setup.fix_norm_coef  if self.setup.fix_norm_coef !=-1 else self.setup.inp_res[0]
         for ii in range(num_objs):
             track,x,y,w,h,cls_id=anns[ii]
-            if cls_id!=0 and cls_id in self.setup.id2cls:
+            if cls_id!=0 and cls_id in self.setup.mapper:
                 ct_int=np.array([x,y]).astype(int)
                 radius = gaussian_radius((math.ceil(h), math.ceil(w)))
                 radius = max(self.min_rad, int(radius))
-                draw_umich_gaussian(sample["hm"][(int(cls_id) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius)
+                draw_umich_gaussian(sample["hm"][(int(self.setup.mapper[cls_id]) - 1)%self.setup.regression_head_dims["hm"]], (x,y), radius)
 
-                sample['cat'][ii] = 0 if self.setup.task=="mot2" else cls_id - 1 #
-                sample['cat2'][ii] = cls_id - 1
-                sample['cls'][ii][int(cls_id - 1)] = 1.0
+                sample['cat'][ii] = 0 if self.setup.task=="mot2" else self.setup.mapper[cls_id] - 1 # 
+                sample['cat2'][ii] = self.setup.mapper[cls_id] - 1
+                sample['cls'][ii][int(self.setup.mapper[cls_id] - 1)] = 1.0
                 sample['ind'][ii] = ct_int[1] * self.setup.out_res[1] + ct_int[0]
                 sample['mask'][ii] = 1.0
 
                 if 'wh' in self.setup.keys:
-                    sample['wh'][ii] = (1. * w, 1. * h) if not self.setup.norm_wh else (w/self.setup.inp_res[1]*aaa ,h/self.setup.inp_res[0]*aaa)
+                    sample['wh'][ii] = (1. * w, 1. * h) if not self.setup.norm_wh else (w/x_coef*aaa ,h/y_coef*aaa)
                     sample['wh_mask'][ii] = 1.0
+                    #print(sample['wh'][ii])
+
                 if 'reg' in self.setup.keys:
                     sample['reg'][ii] = np.array([x-ct_int[0],y-ct_int[1]])
                     sample['reg_mask'][ii] = 1.0
 
                 if 'tracking' in self.setup.keys:
                     pre_ct=pre_anns[pre_anns[:,0]==track]
+
                     if len(pre_ct)>0:
                         sample['tracking_mask'][ii] = 1.0
-                        sample['tracking'][ii] = (pre_ct[0,1:3] - ct_int) if not self.setup.norm_offset else ((pre_ct[0,1] - ct_int[0])/self.setup.inp_res[1]*aaa, (pre_ct[0,2] - ct_int[1])/self.setup.inp_res[0]*aaa)
-                         
-            else:
+                        sample['tracking'][ii] = (pre_ct[0,1:3] - ct_int) if not self.setup.norm_offset else ((pre_ct[0,1] - ct_int[0])/x_coef*aaa, (pre_ct[0,2] - ct_int[1])/y_coef*aaa)
+                        #print(sample['tracking'][ii])
+                        #print(sample['tracking'][ii],self.setup.inp_res)
+
+            elif cls_id==0:
                 region=sample["hm"][:,int(y-h):int(y+h)+1,int(x-w):int(x+w)+1]
                 np.maximum(region,self.setup.ignore_val, out=region)
 
