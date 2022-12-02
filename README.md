@@ -37,8 +37,9 @@ To generate json files, we provided one example converter under "Source/lib.data
 ~~~
 <frame_index>,<target_id>,<bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
 ~~~
-Important Note: All information related to a dataset is kept under "Source/data_conf/" folder. After preparing dataset create a json file (template file can be found on the folder).
+Important Note: All information related to a dataset is kept under "Source/data_conf/" folder. After preparing dataset create a json file (template file can be found on the folder). 
 
+Note: In paper original all used datasets were motion stabilizled datasets.
 
 ### Usage 
 
