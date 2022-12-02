@@ -157,8 +157,8 @@ def decoder(setup,outputs):
 
         trc = trc.view(batch, K, 2)
         if setup.norm_offset:
-            trc[..., 0:1]*=setup.inp_res[1]/setup.norm_coef
-            trc[..., 1:2]*=setup.inp_res[0]/setup.norm_coef
+            trc[..., 0:1]*=x_coef/setup.norm_coef
+            trc[..., 1:2]*=y_coef/setup.norm_coef
         txs =  trc[:, :, 0:1]
         tys =  trc[:, :, 1:2]
 
