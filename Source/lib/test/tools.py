@@ -111,6 +111,9 @@ def decoder(setup,outputs):
     scores, inds, clses, ys, xs = _topk(heat, K=K)
     #scores, inds, clses, ys, xs = _topk(torch.unsqueeze(heat[:,3],0), K=K)
     #scores, inds, clses, ys, xs = _topk(heat[:,:10], K=K)
+    
+    x_coef=self.setup.fix_norm_coef  if self.setup.fix_norm_coef !=-1 else self.setup.inp_res[1]
+    y_coef=self.setup.fix_norm_coef  if self.setup.fix_norm_coef !=-1 else self.setup.inp_res[0]
     if "reg" in outputs:
         reg = _tranpose_and_gather_feat(outputs["reg"], inds)
         reg = reg.view(batch, K, 2)
@@ -136,17 +139,9 @@ def decoder(setup,outputs):
         # else:
         wh = wh.view(batch, K, 2)
         if setup.norm_wh:
-            wh[..., 0:1]*=setup.inp_res[1]/setup.norm_coef
-            wh[..., 1:2]*=setup.inp_res[0]/setup.norm_coef
+            wh[..., 0:1]*=x_coef/setup.norm_coef
+            wh[..., 1:2]*=y_coef/setup.norm_coef
             
-
-
-        # if setup.ltrb:
-        #     bboxes = torch.cat([xs - wh[..., 0:1],
-        #                         ys - wh[..., 1:2],
-        #                         xs + wh[..., 2:3],
-        #                         ys + wh[..., 3:4]], dim=2)
-        # else:
         bboxes = torch.cat([xs - wh[..., 0:1],
                                 ys - wh[..., 1:2],
                                 wh[..., 0:1]*2 ,
